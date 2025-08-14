@@ -1,85 +1,80 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#4CAF50" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lion Group Daimoku Bank</title>
-  <link rel="manifest" href="manifest.json" />
+  <link rel="manifest" href="manifest.json">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      margin: 0;
-      padding: 0;
-      background: #f0f8f5;
-    }
-    h1 {
-      color: #2e7d32;
-      font-size: 1.8em;
-      margin-top: 20px;
-    }
-    p {
-      font-size: 1em;
-      color: #333;
-    }
-    #minutes {
-      font-size: 2em;
-      margin: 20px 0;
-      color: #1b5e20;
-    }
-    button {
-      background: #4CAF50;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      margin: 10px;
-      font-size: 1em;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #45a049;
-    }
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; text-align: center; background-color: #f0f8f5; }
+    header { background: #2e8b57; color: white; padding: 1rem; }
+    h1 { margin: 0; }
+    #minutes { font-size: 2rem; margin-top: 1rem; }
+    button { margin: 0.5rem; padding: 0.5rem 1rem; font-size: 1rem; background-color: #2e8b57; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    button:hover { background-color: #256d47; }
   </style>
 </head>
 <body>
-  <h1>Lion Group Daimoku Bank</h1>
-  <p>Let's chant for everyone's happiness</p>
-  <div id="minutes">Loading...</div>
-  <button onclick="addMinutes(5)">+5 minutes</button>
-  <button onclick="addMinutes(60)">+1 hour</button>
+  <header>
+    <h1>Lion Group Daimoku Bank</h1>
+    <p>Let's chant for everyone's happiness</p>
+  </header>
+  <main>
+    <div id="minutes">Loading...</div>
+    <div>
+      <button onclick="addMinutes(5)">+5 minutes</button>
+      <button onclick="addMinutes(10)">+10 minutes</button>
+      <button onclick="addMinutes(60)">+1 hour</button>
+    </div>
+  </main>
   <script>
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwEK-gGVY-WR3l6vC_rHO7AW1BRtfcNo-bK13H6bPJ7q1SHf716Z_v-88a9ZyLAjovK/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwEK-gGVY-WR3l6vC_rHO7AW1BRtfcNo-bK13H6bPJ7q1SHf716Z_v-88a9ZyLAjovK/exec';
+    const GOAL_MINUTES = 20000;
+    const ui = { minutes: () => document.getElementById('minutes') };
+
+    function fmt(total) {
+      const h = Math.floor(total / 60);
+      const m = total % 60;
+      return `${h}h ${m}m`;
+    }
 
     async function fetchData() {
       try {
-        const res = await fetch(APPS_SCRIPT_URL);
+        const res = await fetch(SCRIPT_URL);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        document.getElementById('minutes').textContent = data.totalMinutes + ' minutes chanted';
+        const total = Number(data.totalMinutes) || 0;
+        ui.minutes().textContent = `${fmt(total)} chanted`;
       } catch (err) {
-        document.getElementById('minutes').textContent = 'Failed to load data.';
-        console.error(err);
+        ui.minutes().textContent = 'Failed to load data.';
+        console.error('GET failed:', err);
       }
     }
 
     async function addMinutes(mins) {
       try {
-        const res1 = await fetch(APPS_SCRIPT_URL);
+        const res1 = await fetch(SCRIPT_URL);
+        if (!res1.ok) throw new Error(`HTTP ${res1.status}`);
         const data1 = await res1.json();
-        const totalMinutes = (data1.totalMinutes || 0) + mins;
-        const millionDaimokuCount = data1.millionDaimokuCount || 0;
+        let totalMinutes = (Number(data1.totalMinutes) || 0) + mins;
+        let millionDaimokuCount = Number(data1.millionDaimokuCount) || 0;
 
-        await fetch(APPS_SCRIPT_URL, {
+        while (totalMinutes >= GOAL_MINUTES) {
+          totalMinutes -= GOAL_MINUTES;
+          millionDaimokuCount += 1;
+        }
+
+        const res2 = await fetch(SCRIPT_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ totalMinutes, millionDaimokuCount })
         });
+        if (!res2.ok) throw new Error(`HTTP ${res2.status}`);
 
-        fetchData();
+        await fetchData();
       } catch (err) {
-        alert('Failed to add minutes.');
-        console.error(err);
+        console.error('POST failed:', err);
+        alert('Failed to add minutes. See console for details.');
       }
     }
 
@@ -87,6 +82,7 @@
   </script>
 </body>
 </html>
+
 
 
 
