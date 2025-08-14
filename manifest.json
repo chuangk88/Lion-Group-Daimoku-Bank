@@ -1,10 +1,10 @@
 {
   "name": "Lion Group Daimoku Bank",
-  "short_name": "DaimokuBank",
-  "start_url": ".",
+  "short_name": "Daimoku Bank",
+  "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#f9fafb",
-  "theme_color": "#4f46e5",
+  "background_color": "#f0f8f5",
+  "theme_color": "#2e8b57",
   "icons": [
     {
       "src": "icon-192.png",

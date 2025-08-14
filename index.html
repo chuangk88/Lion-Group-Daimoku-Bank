@@ -28,6 +28,10 @@
     </div>
   </main>
   <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js');
+    }
+
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwEK-gGVY-WR3l6vC_rHO7AW1BRtfcNo-bK13H6bPJ7q1SHf716Z_v-88a9ZyLAjovK/exec';
     const GOAL_MINUTES = 20000;
     const ui = { minutes: () => document.getElementById('minutes') };
