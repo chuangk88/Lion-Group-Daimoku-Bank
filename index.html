@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lion Group Daimoku Bank</title>
-  <link rel="manifest" href="manifest.json">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: 'Inter', sans-serif; }
@@ -23,14 +22,14 @@
   </div>
 
   <script>
-    const APPS_SCRIPT_URL = ''; // Paste your Apps Script URL here
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/YOUR_DEPLOYED_SCRIPT_URL/exec'; // replace with your Google Apps Script URL
     const GOAL_MINUTES = 20000;
 
     let totalMinutes = 0;
     let millionDaimokuCount = 0;
     let isLoading = true;
     let isError = false;
-    let errorMessage = "";
+    let errorMessage = '';
 
     const renderApp = () => {
       const appDiv = document.getElementById('app');
@@ -54,18 +53,15 @@
       const remainingHours = Math.floor(remainingMinutes / 60);
       const remainingMins = remainingMinutes % 60;
 
-      const buttonText = isLoading ? "Loading..." : "Add Minutes";
       const buttonClasses = isLoading 
           ? "w-full sm:w-auto px-6 py-3 bg-gray-400 text-white rounded-lg cursor-not-allowed"
           : "w-full sm:w-auto px-6 py-3 bg-indigo-600 text-white rounded-lg shadow-md hover:bg-indigo-700";
 
-      const buttonDisabled = isLoading ? "disabled" : "";
-
       appDiv.innerHTML = `
         <div class="w-full max-w-lg bg-gradient-to-b from-blue-50 via-yellow-50 to-red-50 rounded-2xl shadow-xl p-8 space-y-8">
           <header class="text-center">
-            <h1 class="text-4xl font-bold text-indigo-600">Lion Group Daimoku Tracker</h1>
-            <p class="text-gray-500 text-sm mt-2">A simple, shared tracker for your group.</p>
+            <h1 class="text-4xl font-bold text-indigo-600">Lion Group Daimoku Bank</h1>
+            <p class="text-gray-500 text-sm mt-2">Let's chant for everyone's happiness</p>
           </header>
 
           <section class="text-center">
@@ -88,7 +84,7 @@
           </section>
 
           <section class="text-center">
-            <h2 class="text-xl font-semibold text-gray-700">Million Daimoku Goals Chanted</h2>
+            <h2 class="text-xl font-semibold text-green-600">Million Daimoku Goals Chanted</h2>
             <p class="text-5xl font-extrabold text-green-600">${millionDaimokuCount}</p>
           </section>
 
@@ -96,7 +92,7 @@
             <h2 class="text-2xl font-semibold">Add Minutes Chanted</h2>
             <div class="flex flex-col sm:flex-row gap-4">
               <input type="number" id="minutesInput" class="flex-grow p-3 rounded-lg border-2 border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Enter minutes" min="0"/>
-              <button id="addButton" class="${buttonClasses}" ${buttonDisabled}>${buttonText}</button>
+              <button id="addButton" class="${buttonClasses}" ${isLoading ? 'disabled' : ''}>${isLoading ? 'Loading...' : 'Add Minutes'}</button>
             </div>
           </section>
         </div>
@@ -104,25 +100,16 @@
     };
 
     const fetchMinutes = async () => {
-      if (!APPS_SCRIPT_URL) {
-        isLoading = false;
-        renderApp();
-        return;
-      }
-
       isLoading = true;
       renderApp();
-
       try {
         const response = await fetch(APPS_SCRIPT_URL);
-        if (!response.ok) throw new Error(`HTTP Status ${response.status}`);
         const data = await response.json();
         totalMinutes = parseInt(data.totalMinutes) || 0;
         millionDaimokuCount = parseInt(data.millionDaimokuCount) || 0;
       } catch (error) {
-        console.error("Fetch error:", error);
         isError = true;
-        errorMessage = `Failed to load data: ${error.message}`;
+        errorMessage = `Failed to load data. ${error.message}`;
       } finally {
         isLoading = false;
         renderApp();
@@ -130,65 +117,41 @@
     };
 
     const handleAddMinutes = async () => {
+      if (isLoading) return;
       const minutesInput = document.getElementById('minutesInput');
       const minutesToAdd = parseInt(minutesInput.value, 10);
-      if (!minutesToAdd || minutesToAdd <= 0) return;
-
-      let newTotalMinutes = totalMinutes + minutesToAdd;
-      let newMillionDaimokuCount = millionDaimokuCount;
-
-      while (newTotalMinutes >= GOAL_MINUTES) {
-        newTotalMinutes -= GOAL_MINUTES;
-        newMillionDaimokuCount += 1;
-      }
-
-      if (!APPS_SCRIPT_URL) {
-        totalMinutes = newTotalMinutes;
-        millionDaimokuCount = newMillionDaimokuCount;
-        minutesInput.value = '';
+      if (minutesToAdd > 0) {
+        isLoading = true;
         renderApp();
-        return;
-      }
-
-      isLoading = true;
-      renderApp();
-
-      try {
-        const response = await fetch(APPS_SCRIPT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ totalMinutes: newTotalMinutes, millionDaimokuCount: newMillionDaimokuCount })
-        });
-        if (!response.ok) throw new Error(`HTTP Status ${response.status}`);
-        const data = await response.json();
-        totalMinutes = parseInt(data.totalMinutes) || 0;
-        millionDaimokuCount = parseInt(data.millionDaimokuCount) || 0;
-        minutesInput.value = '';
-      } catch (error) {
-        console.error("Update error:", error);
-        isError = true;
-        errorMessage = `Failed to add minutes: ${error.message}`;
-      } finally {
-        isLoading = false;
-        renderApp();
+        try {
+          const response = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ totalMinutes: totalMinutes + minutesToAdd, millionDaimokuCount })
+          });
+          const data = await response.json();
+          totalMinutes = parseInt(data.totalMinutes) || 0;
+          millionDaimokuCount = parseInt(data.millionDaimokuCount) || 0;
+          minutesInput.value = '';
+        } catch (error) {
+          isError = true;
+          errorMessage = `Failed to add minutes. ${error.message}`;
+        } finally {
+          isLoading = false;
+          renderApp();
+        }
       }
     };
 
     window.onload = () => {
       fetchMinutes();
-      document.body.addEventListener('click', (event) => {
+      document.body.addEventListener('click', event => {
         if (event.target.id === 'addButton') handleAddMinutes();
         if (event.target.id === 'retryButton') { isError = false; fetchMinutes(); }
       });
     };
-
-    // Register service worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js')
-        .then(() => console.log('Service worker registered'))
-        .catch(err => console.error('Service worker failed:', err));
-    }
   </script>
 </body>
 </html>
+
 
