@@ -1,89 +1,91 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lion Group Daimoku Bank</title>
-  <link rel="manifest" href="manifest.json">
-  <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 0; text-align: center; background-color: #f0f8f5; }
-    header { background: #2e8b57; color: white; padding: 1rem; }
-    h1 { margin: 0; }
-    #minutes { font-size: 2rem; margin-top: 1rem; }
-    button { margin: 0.5rem; padding: 0.5rem 1rem; font-size: 1rem; background-color: #2e8b57; color: white; border: none; border-radius: 5px; cursor: pointer; }
-    button:hover { background-color: #256d47; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lion Group Daimoku Bank</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="manifest" href="manifest.json">
+<style>
+body { font-family: 'Inter', sans-serif; }
+</style>
 </head>
-<body>
-  <header>
-    <h1>Lion Group Daimoku Bank</h1>
-    <p>Let's chant for everyone's happiness</p>
-  </header>
-  <main>
-    <div id="minutes">Loading...</div>
-    <div>
-      <button onclick="addMinutes(5)">+5 minutes</button>
-      <button onclick="addMinutes(10)">+10 minutes</button>
-      <button onclick="addMinutes(60)">+1 hour</button>
-    </div>
-  </main>
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js');
-    }
+<body class="bg-gray-50 text-gray-900">
+<div id="app" class="min-h-screen flex items-center justify-center p-4"></div>
+<script>
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwEK-gGVY-WR3l6vC_rHO7AW1BRtfcNo-bK13H6bPJ7q1SHf716Z_v-88a9ZyLAjovK/exec';
+const GOAL_MINUTES = 20000;
+let totalMinutes = 0, millionDaimokuCount = 0, isLoading = true, isError = false, errorMessage = '';
 
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwEK-gGVY-WR3l6vC_rHO7AW1BRtfcNo-bK13H6bPJ7q1SHf716Z_v-88a9ZyLAjovK/exec';
-    const GOAL_MINUTES = 20000;
-    const ui = { minutes: () => document.getElementById('minutes') };
+const renderApp = () => {
+  const appDiv = document.getElementById('app');
+  if (!appDiv) return;
+  if (isError) {
+    appDiv.innerHTML = `<div class="w-full max-w-lg bg-red-100 border border-red-400 text-red-700 p-8 rounded-2xl shadow-xl space-y-4 text-center"><strong class="font-bold text-2xl">Something went wrong!</strong><p class="text-sm">${errorMessage}</p><button id="retryButton" class="px-6 py-2 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 mt-4">Retry</button></div>`;
+    return;
+  }
 
-    function fmt(total) {
-      const h = Math.floor(total / 60);
-      const m = total % 60;
-      return `${h}h ${m}m`;
-    }
+  const progress = Math.min((totalMinutes / GOAL_MINUTES) * 100, 100);
+  const minutes = totalMinutes % 60;
+  const hours = Math.floor(totalMinutes / 60);
+  const remainingMinutes = Math.max(GOAL_MINUTES - totalMinutes, 0);
+  const remainingHours = Math.floor(remainingMinutes / 60);
+  const remainingMins = remainingMinutes % 60;
 
-    async function fetchData() {
-      try {
-        const res = await fetch(SCRIPT_URL);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        const total = Number(data.totalMinutes) || 0;
-        ui.minutes().textContent = `${fmt(total)} chanted`;
-      } catch (err) {
-        ui.minutes().textContent = 'Failed to load data.';
-        console.error('GET failed:', err);
-      }
-    }
+  const buttonText = isLoading ? 'Loading...' : 'Add Minutes';
+  const buttonClasses = isLoading ? 'w-full sm:w-auto px-6 py-3 bg-gray-400 text-white rounded-lg cursor-not-allowed' : 'w-full sm:w-auto px-6 py-3 bg-indigo-600 text-white rounded-lg shadow-md hover:bg-indigo-700';
+  const buttonDisabled = isLoading ? 'disabled' : '';
 
-    async function addMinutes(mins) {
-      try {
-        const res1 = await fetch(SCRIPT_URL);
-        if (!res1.ok) throw new Error(`HTTP ${res1.status}`);
-        const data1 = await res1.json();
-        let totalMinutes = (Number(data1.totalMinutes) || 0) + mins;
-        let millionDaimokuCount = Number(data1.millionDaimokuCount) || 0;
+  appDiv.innerHTML = `
+<div class="w-full max-w-lg bg-gradient-to-b from-blue-50 via-yellow-50 to-red-50 rounded-2xl shadow-xl p-8 space-y-8">
+<header class="text-center"><h1 class="text-4xl font-bold text-indigo-600">Lion Group Daimoku Bank</h1><p class="text-gray-500 text-sm mt-2">Let's chant for everyone's happiness</p></header>
+<section class="text-center"><h2 class="text-2xl font-semibold mb-2">Total Chanted</h2><p class="text-6xl font-extrabold text-indigo-600">${hours}h ${minutes}m</p></section>
+<section class="space-y-4"><div class="flex items-center justify-between"><h2 class="text-2xl font-semibold">Goal Progress</h2><span class="text-xl font-bold text-gray-500">${Math.round(progress)}%</span></div><div class="w-full bg-gray-200 rounded-full h-4"><div class="bg-indigo-600 h-4 rounded-full transition-all duration-500" style="width: ${progress}%"></div></div><div class="flex justify-between text-sm text-gray-500"><span>Goal: 1 Million Daimoku (${GOAL_MINUTES} minutes)</span><span>${remainingHours}h ${remainingMins}m remaining</span></div></section>
+<section class="text-center"><h2 class="text-xl font-semibold text-gray-700">Million Daimoku Goals Chanted</h2><p class="text-5xl font-extrabold text-green-600">${millionDaimokuCount}</p></section>
+<section class="space-y-4"><h2 class="text-2xl font-semibold">Add Minutes Chanted</h2><div class="flex flex-col sm:flex-row gap-4"><input type="number" id="minutesInput" class="flex-grow p-3 rounded-lg border-2 border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Enter minutes" min="0"/><button id="addButton" class="${buttonClasses}" ${buttonDisabled}>${buttonText}</button></div></section>
+</div>`;
+};
 
-        while (totalMinutes >= GOAL_MINUTES) {
-          totalMinutes -= GOAL_MINUTES;
-          millionDaimokuCount += 1;
-        }
+const fetchMinutes = async () => {
+  isLoading = true; renderApp();
+  try {
+    const res = await fetch(APPS_SCRIPT_URL);
+    const data = await res.json();
+    totalMinutes = parseInt(data.totalMinutes) || 0;
+    millionDaimokuCount = parseInt(data.millionDaimokuCount) || 0;
+  } catch (err) {
+    console.error(err);
+    isError = true;
+    errorMessage = 'Failed to load data. Check Apps Script deployment and permissions.';
+  } finally { isLoading = false; renderApp(); }
+};
 
-        const res2 = await fetch(SCRIPT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ totalMinutes, millionDaimokuCount })
-        });
-        if (!res2.ok) throw new Error(`HTTP ${res2.status}`);
+const handleAddMinutes = async () => {
+  const input = document.getElementById('minutesInput');
+  const mins = parseInt(input.value, 10);
+  if (!mins || isLoading) return;
+  isLoading = true; renderApp();
+  try {
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ minutesToAdd: mins })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    await fetchMinutes();
+    input.value = '';
+  } catch (err) { console.error(err); alert('Failed to add minutes.'); }
+  finally { isLoading = false; renderApp(); }
+};
 
-        await fetchData();
-      } catch (err) {
-        console.error('POST failed:', err);
-        alert('Failed to add minutes. See console for details.');
-      }
-    }
-
-    fetchData();
-  </script>
+window.onload = () => {
+  fetchMinutes();
+  document.body.addEventListener('click', e => {
+    if(e.target.id==='addButton') handleAddMinutes();
+    else if(e.target.id==='retryButton'){ isError = false; fetchMinutes(); }
+  });
+};
+</script>
 </body>
 </html>
 

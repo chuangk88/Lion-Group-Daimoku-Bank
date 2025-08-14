@@ -1,17 +1,12 @@
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open('pwa-cache-v1').then(cache => cache.addAll([
-      '/',
-      '/index.html',
-      '/manifest.json',
-      '/icon-192.png',
-      '/icon-512.png'
-    ]))
-  );
+self.addEventListener('install', function(event) {
+  self.skipWaiting();
 });
 
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request).then(response => response || fetch(event.request))
-  );
+self.addEventListener('activate', function(event) {
+  self.clients.claim();
+});
+
+self.addEventListener('fetch', function(event) {
+  // Simply fetch all requests from the network for real-time sync
+  event.respondWith(fetch(event.request));
 });
