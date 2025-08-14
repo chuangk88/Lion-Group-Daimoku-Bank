@@ -1,11 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta http-equiv="refresh" content="0; url=https://script.google.com/macros/s/AKfycbyS11cDnxRTlWea5Iv0RMxWdh4P3f8iVd6F-5MKjvPlaM-dfdvcICbwKkCSY-obUv_1/exec" />
-  <title>Redirecting to Daimoku Tracker...</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="manifest" href="manifest.json" />
+  <title>Daimoku Tracker</title>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js');
+    }
+  </script>
 </head>
 <body>
-  <p>If you're not redirected, <a href="https://script.google.com/macros/s/AKfycbyS11cDnxRTlWea5Iv0RMxWdh4P3f8iVd6F-5MKjvPlaM-dfdvcICbwKkCSY-obUv_1/exec">click here</a>.</p>
+  <h1>Redirecting to Daimoku Tracker...</h1>
+  <script>
+    window.location.href = "https://script.google.com/macros/s/AKfycbyS11cDnxRTlWea5Iv0RMxWdh4P3f8iVd6F-5MKjvPlaM-dfdvcICbwKkCSY-obUv_1/exec";
+  </script>
 </body>
 </html>
 
