@@ -1,158 +1,93 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#4CAF50" />
   <title>Lion Group Daimoku Bank</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="manifest" href="manifest.json" />
   <style>
-    body { font-family: 'Inter', sans-serif; }
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      background: #f0f8f5;
+    }
+    h1 {
+      color: #2e7d32;
+      font-size: 1.8em;
+      margin-top: 20px;
+    }
+    p {
+      font-size: 1em;
+      color: #333;
+    }
+    #minutes {
+      font-size: 2em;
+      margin: 20px 0;
+      color: #1b5e20;
+    }
+    button {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin: 10px;
+      font-size: 1em;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #45a049;
+    }
   </style>
 </head>
-<body class="bg-gray-50 text-gray-900">
-
-  <div id="app" class="min-h-screen flex items-center justify-center p-4">
-    <div id="loading-spinner" class="flex flex-col items-center justify-center">
-      <svg class="animate-spin h-10 w-10 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-      </svg>
-      <p class="mt-4 text-gray-600">Loading collective minutes...</p>
-    </div>
-  </div>
-
+<body>
+  <h1>Lion Group Daimoku Bank</h1>
+  <p>Let's chant for everyone's happiness</p>
+  <div id="minutes">Loading...</div>
+  <button onclick="addMinutes(5)">+5 minutes</button>
+  <button onclick="addMinutes(60)">+1 hour</button>
   <script>
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/YOUR_DEPLOYED_SCRIPT_URL/exec';
-    const GOAL_MINUTES = 20000;
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwEK-gGVY-WR3l6vC_rHO7AW1BRtfcNo-bK13H6bPJ7q1SHf716Z_v-88a9ZyLAjovK/exec';
 
-    let totalMinutes = 0;
-    let millionDaimokuCount = 0;
-    let isLoading = true;
-    let isError = false;
-    let errorMessage = '';
-
-    const renderApp = () => {
-      const appDiv = document.getElementById('app');
-      if (!appDiv) return;
-
-      if (isError) {
-        appDiv.innerHTML = `
-          <div class="w-full max-w-lg bg-red-100 border border-red-400 text-red-700 p-8 rounded-2xl shadow-xl space-y-4 text-center">
-            <strong class="font-bold text-2xl">Something went wrong!</strong>
-            <p class="text-sm">${errorMessage}</p>
-            <button id="retryButton" class="px-6 py-2 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 mt-4">Retry</button>
-          </div>
-        `;
-        return;
-      }
-
-      const progress = Math.min((totalMinutes / GOAL_MINUTES) * 100, 100);
-      const minutes = totalMinutes % 60;
-      const hours = Math.floor(totalMinutes / 60);
-      const remainingMinutes = Math.max(GOAL_MINUTES - totalMinutes, 0);
-      const remainingHours = Math.floor(remainingMinutes / 60);
-      const remainingMins = remainingMinutes % 60;
-
-      const buttonClasses = isLoading 
-          ? "w-full sm:w-auto px-6 py-3 bg-gray-400 text-white rounded-lg cursor-not-allowed"
-          : "w-full sm:w-auto px-6 py-3 bg-indigo-600 text-white rounded-lg shadow-md hover:bg-indigo-700";
-
-      appDiv.innerHTML = `
-        <div class="w-full max-w-lg bg-gradient-to-b from-blue-50 via-yellow-50 to-red-50 rounded-2xl shadow-xl p-8 space-y-8">
-          <header class="text-center">
-            <h1 class="text-4xl font-bold text-indigo-600">Lion Group Daimoku Bank</h1>
-            <p class="text-gray-500 text-sm mt-2">Let's chant for everyone's happiness</p>
-          </header>
-
-          <section class="text-center">
-            <h2 class="text-2xl font-semibold mb-2">Total Chanted</h2>
-            <p class="text-6xl font-extrabold text-indigo-600">${hours}h ${minutes}m</p>
-          </section>
-
-          <section class="space-y-4">
-            <div class="flex items-center justify-between">
-              <h2 class="text-2xl font-semibold">Goal Progress</h2>
-              <span class="text-xl font-bold text-gray-500">${Math.round(progress)}%</span>
-            </div>
-            <div class="w-full bg-gray-200 rounded-full h-4">
-              <div class="bg-indigo-600 h-4 rounded-full transition-all duration-500 ease-in-out" style="width: ${progress}%"></div>
-            </div>
-            <div class="flex justify-between text-sm text-gray-500">
-              <span>Goal: 1 Million Daimoku (${GOAL_MINUTES} minutes)</span>
-              <span>${remainingHours}h ${remainingMins}m remaining</span>
-            </div>
-          </section>
-
-          <section class="text-center">
-            <h2 class="text-xl font-semibold text-green-600">Million Daimoku Goals Chanted</h2>
-            <p class="text-5xl font-extrabold text-green-600">${millionDaimokuCount}</p>
-          </section>
-
-          <section class="space-y-4">
-            <h2 class="text-2xl font-semibold">Add Minutes Chanted</h2>
-            <div class="flex flex-col sm:flex-row gap-4">
-              <input type="number" id="minutesInput" class="flex-grow p-3 rounded-lg border-2 border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Enter minutes" min="0"/>
-              <button id="addButton" class="${buttonClasses}" ${isLoading ? 'disabled' : ''}>${isLoading ? 'Loading...' : 'Add Minutes'}</button>
-            </div>
-          </section>
-        </div>
-      `;
-    };
-
-    const fetchMinutes = async () => {
-      isLoading = true;
-      renderApp();
+    async function fetchData() {
       try {
-        const response = await fetch(APPS_SCRIPT_URL);
-        const data = await response.json();
-        totalMinutes = parseInt(data.totalMinutes) || 0;
-        millionDaimokuCount = parseInt(data.millionDaimokuCount) || 0;
-      } catch (error) {
-        isError = true;
-        errorMessage = `Failed to load data. ${error.message}`;
-      } finally {
-        isLoading = false;
-        renderApp();
+        const res = await fetch(APPS_SCRIPT_URL);
+        const data = await res.json();
+        document.getElementById('minutes').textContent = data.totalMinutes + ' minutes chanted';
+      } catch (err) {
+        document.getElementById('minutes').textContent = 'Failed to load data.';
+        console.error(err);
       }
-    };
+    }
 
-    const handleAddMinutes = async () => {
-      if (isLoading) return;
-      const minutesInput = document.getElementById('minutesInput');
-      const minutesToAdd = parseInt(minutesInput.value, 10);
-      if (minutesToAdd > 0) {
-        isLoading = true;
-        renderApp();
-        try {
-          const response = await fetch(APPS_SCRIPT_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ totalMinutes: totalMinutes + minutesToAdd, millionDaimokuCount })
-          });
-          const data = await response.json();
-          totalMinutes = parseInt(data.totalMinutes) || 0;
-          millionDaimokuCount = parseInt(data.millionDaimokuCount) || 0;
-          minutesInput.value = '';
-        } catch (error) {
-          isError = true;
-          errorMessage = `Failed to add minutes. ${error.message}`;
-        } finally {
-          isLoading = false;
-          renderApp();
-        }
+    async function addMinutes(mins) {
+      try {
+        const res1 = await fetch(APPS_SCRIPT_URL);
+        const data1 = await res1.json();
+        const totalMinutes = (data1.totalMinutes || 0) + mins;
+        const millionDaimokuCount = data1.millionDaimokuCount || 0;
+
+        await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ totalMinutes, millionDaimokuCount })
+        });
+
+        fetchData();
+      } catch (err) {
+        alert('Failed to add minutes.');
+        console.error(err);
       }
-    };
+    }
 
-    window.onload = () => {
-      fetchMinutes();
-      document.body.addEventListener('click', event => {
-        if (event.target.id === 'addButton') handleAddMinutes();
-        if (event.target.id === 'retryButton') { isError = false; fetchMinutes(); }
-      });
-    };
+    fetchData();
   </script>
 </body>
 </html>
+
 
 
 
